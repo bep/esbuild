@@ -947,7 +947,7 @@ func (c *linkerContext) computeCrossChunkDependencies() {
 						// Rewrite external dynamic imports to point to the chunk for that entry point
 						for _, importRecordIndex := range part.ImportRecordIndices {
 							record := &repr.AST.ImportRecords[importRecordIndex]
-							if record.SourceIndex.IsValid() && c.isExternalDynamicImport(record, sourceIndex) {
+							if record.SourceIndex.IsValid() && c.isImportOfAdditionalEntryPoint(record, sourceIndex) {
 								otherChunkIndex := c.graph.Files[record.SourceIndex.GetIndex()].EntryPointChunkIndex
 								record.Path.Text = c.chunks[otherChunkIndex].uniqueKey
 								record.SourceIndex = ast.Index32{}
@@ -1891,8 +1891,8 @@ func (c *linkerContext) scanImportsAndExports() {
 			for _, importRecordIndex := range part.ImportRecordIndices {
 				record := &repr.AST.ImportRecords[importRecordIndex]
 
-				// Don't follow external imports (this includes import() expressions)
-				if !record.SourceIndex.IsValid() || c.isExternalDynamicImport(record, sourceIndex) {
+				// Don't follow external imports (this includes "import()" and "new URL()" expressions)
+				if !record.SourceIndex.IsValid() || c.isImportOfAdditionalEntryPoint(record, sourceIndex) {
 					// This is an external import. Check if it will be a "require()" call.
 					if record.Kind == ast.ImportRequire || !c.options.OutputFormat.KeepESMImportExportSyntax() ||
 						(record.Kind == ast.ImportDynamic && c.options.UnsupportedJSFeatures.Has(compat.DynamicImport)) {
@@ -3188,7 +3188,7 @@ func (c *linkerContext) markFileReachableForCodeSplitting(sourceIndex uint32, en
 
 		// Traverse into all imported files
 		for _, record := range repr.AST.ImportRecords {
-			if record.SourceIndex.IsValid() && !c.isExternalDynamicImport(&record, sourceIndex) {
+			if record.SourceIndex.IsValid() && !c.isImportOfAdditionalEntryPoint(&record, sourceIndex) {
 				c.markFileReachableForCodeSplitting(record.SourceIndex.GetIndex(), entryPointBit, distanceFromEntryPoint)
 			}
 		}
@@ -3277,9 +3277,9 @@ func (c *linkerContext) markFileLiveForTreeShaking(sourceIndex uint32) {
 	}
 }
 
-func (c *linkerContext) isExternalDynamicImport(record *ast.ImportRecord, sourceIndex uint32) bool {
+func (c *linkerContext) isImportOfAdditionalEntryPoint(record *ast.ImportRecord, sourceIndex uint32) bool {
 	return c.options.CodeSplitting &&
-		record.Kind == ast.ImportDynamic &&
+		(record.Kind == ast.ImportDynamic || record.Kind == ast.ImportNewURL) &&
 		c.graph.Files[record.SourceIndex.GetIndex()].IsEntryPoint() &&
 		record.SourceIndex.GetIndex() != sourceIndex
 }
@@ -4187,8 +4187,8 @@ func (c *linkerContext) findImportedPartsInJSOrder(chunk *chunkInfo) (js []uint3
 				for _, importRecordIndex := range part.ImportRecordIndices {
 					record := &repr.AST.ImportRecords[importRecordIndex]
 					if record.SourceIndex.IsValid() && (record.Kind == ast.ImportStmt || isPartInThisChunk) {
-						if c.isExternalDynamicImport(record, sourceIndex) {
-							// Don't follow import() dependencies
+						if c.isImportOfAdditionalEntryPoint(record, sourceIndex) {
+							// Don't follow "import()" or "new URL()" dependencies
 							continue
 						}
 						visit(record.SourceIndex.GetIndex())

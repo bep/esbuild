@@ -1890,6 +1890,8 @@ func importKindToResolveKind(kind ast.ImportKind) ResolveKind {
 		return ResolveJSDynamicImport
 	case ast.ImportRequireResolve:
 		return ResolveJSRequireResolve
+	case ast.ImportNewURL:
+		return ResolveJSNewURL
 	case ast.ImportAt:
 		return ResolveCSSImportRule
 	case ast.ImportComposesFrom:
@@ -1903,22 +1905,24 @@ func importKindToResolveKind(kind ast.ImportKind) ResolveKind {
 
 func resolveKindToImportKind(kind ResolveKind) ast.ImportKind {
 	switch kind {
-	case ResolveEntryPoint:
-		return ast.ImportEntryPoint
-	case ResolveJSImportStatement:
-		return ast.ImportStmt
-	case ResolveJSRequireCall:
-		return ast.ImportRequire
-	case ResolveJSDynamicImport:
-		return ast.ImportDynamic
-	case ResolveJSRequireResolve:
-		return ast.ImportRequireResolve
 	case ResolveCSSImportRule:
 		return ast.ImportAt
 	case ResolveCSSComposesFrom:
 		return ast.ImportComposesFrom
 	case ResolveCSSURLToken:
 		return ast.ImportURL
+	case ResolveEntryPoint:
+		return ast.ImportEntryPoint
+	case ResolveJSDynamicImport:
+		return ast.ImportDynamic
+	case ResolveJSImportStatement:
+		return ast.ImportStmt
+	case ResolveJSNewURL:
+		return ast.ImportNewURL
+	case ResolveJSRequireCall:
+		return ast.ImportRequire
+	case ResolveJSRequireResolve:
+		return ast.ImportRequireResolve
 	default:
 		panic("Internal error")
 	}

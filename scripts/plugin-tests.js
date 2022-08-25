@@ -6,10 +6,6 @@ const http = require('http')
 const url = require('url')
 const fs = require('fs')
 
-const readFileAsync = util.promisify(fs.readFile)
-const writeFileAsync = util.promisify(fs.writeFile)
-const mkdirAsync = util.promisify(fs.mkdir)
-
 const repoDir = path.dirname(__dirname)
 const rootTestDir = path.join(repoDir, 'scripts', '.plugin-tests')
 
@@ -80,7 +76,7 @@ let pluginTests = {
   async emptyArray({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `export default 123`)
+    await fs.promises.writeFile(input, `export default 123`)
     await esbuild.build({
       entryPoints: [input],
       bundle: true,
@@ -95,7 +91,7 @@ let pluginTests = {
   async emptyArrayWithBuildSync({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `export default 123`)
+    await fs.promises.writeFile(input, `export default 123`)
     esbuild.buildSync({
       entryPoints: [input],
       bundle: true,
@@ -371,7 +367,7 @@ let pluginTests = {
   async modifyInitialOptions({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.what')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `export default 123`)
+    await fs.promises.writeFile(input, `export default 123`)
     await esbuild.build({
       entryPoints: [input],
       bundle: true,
@@ -391,7 +387,7 @@ let pluginTests = {
   async modifyInitialOptionsAsync({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.what')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `export default 123`)
+    await fs.promises.writeFile(input, `export default 123`)
     await esbuild.build({
       entryPoints: [input],
       bundle: true,
@@ -413,11 +409,11 @@ let pluginTests = {
     const input = path.join(testDir, 'in.js')
     const custom = path.join(testDir, 'example.custom')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import x from './example.custom'
       export default x
     `)
-    await writeFileAsync(custom, ``)
+    await fs.promises.writeFile(custom, ``)
     await esbuild.build({
       entryPoints: [input],
       bundle: true,
@@ -441,11 +437,11 @@ let pluginTests = {
     const input = path.join(testDir, 'in.js')
     const custom = path.join(testDir, 'example.txt')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import x from 'test'
       export default x
     `)
-    await writeFileAsync(custom, `example text`)
+    await fs.promises.writeFile(custom, `example text`)
     await esbuild.build({
       entryPoints: [input],
       bundle: true,
@@ -468,7 +464,7 @@ let pluginTests = {
   async fibonacciResolverMemoized({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import x from 'fib(10)'
       export default x
     `)
@@ -501,7 +497,7 @@ let pluginTests = {
   async fibonacciResolverNotMemoized({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import x from 'fib(10)'
       export default x
     `)
@@ -535,11 +531,11 @@ let pluginTests = {
     const input = path.join(testDir, 'in.js')
     const nested = path.join(testDir, 'nested.js')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import x from 'test'
       export default x
     `)
-    await writeFileAsync(nested, `
+    await fs.promises.writeFile(nested, `
       export default 123
     `)
     let trace = []
@@ -590,11 +586,11 @@ let pluginTests = {
     const input = path.join(testDir, 'in.js')
     const nested = path.join(testDir, 'nested.js')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import x from './nested.js'
       export default x
     `)
-    await writeFileAsync(nested, `
+    await fs.promises.writeFile(nested, `
       export default 123
     `)
     let trace = []
@@ -644,7 +640,7 @@ let pluginTests = {
   async httpRelative({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import x from 'http://example.com/assets/js/example.js'
       export default x
     `)
@@ -680,7 +676,7 @@ let pluginTests = {
   async rewriteExternalWithNamespace({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import {exists} from 'extern'
       export default exists
     `)
@@ -705,7 +701,7 @@ let pluginTests = {
   async rewriteExternalWithoutNamespace({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import {exists} from 'extern'
       export default exists
     `)
@@ -732,12 +728,12 @@ let pluginTests = {
     const outdir = path.join(testDir, 'out')
     const outdir2 = path.join(testDir, 'out2')
     const target = path.join(outdir2, 'target.js')
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import {exists} from 'extern'
       export default exists
     `)
-    await mkdirAsync(outdir2, { recursive: true })
-    await writeFileAsync(target, `
+    await fs.promises.mkdir(outdir2, { recursive: true })
+    await fs.promises.writeFile(target, `
       module.exports = require('fs')
     `)
     await esbuild.build({
@@ -768,15 +764,15 @@ let pluginTests = {
     const example = path.join(testDir, 'example.custom')
     const resolveDir = path.join(testDir, 'target')
     const loadme = path.join(resolveDir, 'loadme.js')
-    await mkdirAsync(resolveDir)
-    await writeFileAsync(input, `
+    await fs.promises.mkdir(resolveDir)
+    await fs.promises.writeFile(input, `
       import value from './example.custom'
       export default value
     `)
-    await writeFileAsync(example, `
+    await fs.promises.writeFile(example, `
       export {default} from './loadme'
     `)
-    await writeFileAsync(loadme, `
+    await fs.promises.writeFile(loadme, `
       export default 123
     `)
     await esbuild.build({
@@ -788,7 +784,7 @@ let pluginTests = {
         name: 'name',
         setup(build) {
           build.onLoad({ filter: /\.custom$/ }, async (args) => {
-            return { contents: await readFileAsync(args.path), resolveDir }
+            return { contents: await fs.promises.readFile(args.path), resolveDir }
           })
         },
       }],
@@ -800,23 +796,23 @@ let pluginTests = {
   async resolveWithSideEffectsFalse({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
 
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import './re-export-unused'
       import {a, b, c} from './re-export-used'
       import './import-unused'
       use([a, b, c])
     `)
-    await writeFileAsync(path.join(testDir, 're-export-unused.js'), `
+    await fs.promises.writeFile(path.join(testDir, 're-export-unused.js'), `
       export {default as a} from 'plugin:unused-false'
       export {default as b} from 'plugin:unused-true'
       export {default as c} from 'plugin:unused-none'
     `)
-    await writeFileAsync(path.join(testDir, 're-export-used.js'), `
+    await fs.promises.writeFile(path.join(testDir, 're-export-used.js'), `
       export {default as a} from 'plugin:used-false'
       export {default as b} from 'plugin:used-true'
       export {default as c} from 'plugin:used-none'
     `)
-    await writeFileAsync(path.join(testDir, 'import-unused.js'), `
+    await fs.promises.writeFile(path.join(testDir, 'import-unused.js'), `
       import 'plugin:ignored-false'
       import 'plugin:ignored-true'
       import 'plugin:ignored-none'
@@ -877,15 +873,15 @@ let pluginTests = {
     const example = path.join(testDir, 'example.custom')
     const resolveDir = path.join(testDir, 'target')
     const loadme = path.join(resolveDir, 'loadme.js')
-    await mkdirAsync(resolveDir)
-    await writeFileAsync(input, `
+    await fs.promises.mkdir(resolveDir)
+    await fs.promises.writeFile(input, `
       import value from './example.custom'
       export default value
     `)
-    await writeFileAsync(example, `
+    await fs.promises.writeFile(example, `
       export {default} from './target/loadme'
     `)
-    await writeFileAsync(loadme, `
+    await fs.promises.writeFile(loadme, `
       export default 123
     `)
     await esbuild.build({
@@ -897,7 +893,7 @@ let pluginTests = {
         name: 'name',
         setup(build) {
           build.onLoad({ filter: /\.custom$/ }, async (args) => {
-            return { contents: await readFileAsync(args.path) }
+            return { contents: await fs.promises.readFile(args.path) }
           })
         },
       }],
@@ -911,12 +907,12 @@ let pluginTests = {
     const output = path.join(testDir, 'out.js')
     const resolveDir = path.join(testDir, 'target')
     const loadme = path.join(resolveDir, 'loadme.js')
-    await mkdirAsync(resolveDir)
-    await writeFileAsync(input, `
+    await fs.promises.mkdir(resolveDir)
+    await fs.promises.writeFile(input, `
       import value from 'virtual'
       export default value
     `)
-    await writeFileAsync(loadme, `
+    await fs.promises.writeFile(loadme, `
       export default 123
     `)
     await esbuild.build({
@@ -942,12 +938,12 @@ let pluginTests = {
     const output = path.join(testDir, 'out.js')
     const resolveDir = path.join(testDir, 'target')
     const loadme = path.join(resolveDir, 'loadme.js')
-    await mkdirAsync(resolveDir)
-    await writeFileAsync(input, `
+    await fs.promises.mkdir(resolveDir)
+    await fs.promises.writeFile(input, `
       import value from 'virtual'
       export default value
     `)
-    await writeFileAsync(loadme, `
+    await fs.promises.writeFile(loadme, `
       export default 123
     `)
     let error
@@ -982,11 +978,11 @@ let pluginTests = {
     const input = path.join(testDir, 'in.js')
     const wasm = path.join(testDir, 'test.wasm')
     const output = path.join(testDir, 'out.js')
-    await writeFileAsync(input, `
+    await fs.promises.writeFile(input, `
       import load from './test.wasm'
       export default async (x, y) => (await load()).add(x, y)
     `)
-    await writeFileAsync(wasm, Buffer.of(
+    await fs.promises.writeFile(wasm, Buffer.of(
       // #[wasm_bindgen]
       // pub fn add(x: i32, y: i32) -> i32 { x + y }
       0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00, 0x01, 0x07, 0x01, 0x60,
@@ -1009,7 +1005,7 @@ let pluginTests = {
             namespace: args.namespace === 'wasm-stub' ? 'wasm-binary' : 'wasm-stub',
           }))
           build.onLoad({ filter: /.*/, namespace: 'wasm-binary' }, async (args) =>
-            ({ contents: await readFileAsync(args.path), loader: 'binary' }))
+            ({ contents: await fs.promises.readFile(args.path), loader: 'binary' }))
           build.onLoad({ filter: /.*/, namespace: 'wasm-stub' }, async (args) => ({
             contents: `import wasm from ${JSON.stringify(args.path)}
               export default async (imports) =>
@@ -1054,7 +1050,7 @@ let pluginTests = {
   async entryPointFileNamespace({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
     let worked = false
-    await writeFileAsync(input, 'stuff')
+    await fs.promises.writeFile(input, 'stuff')
     await esbuild.build({
       entryPoints: [input],
       write: false,
@@ -2109,10 +2105,10 @@ let pluginTests = {
 
   async dynamicImportDuplicateChunkIssue1099({ esbuild, testDir }) {
     const outdir = path.join(testDir, 'out')
-    await mkdirAsync(path.join(testDir, 'hi'), { recursive: true })
-    await writeFileAsync(path.join(testDir, 'index.js'), `import x from 'manifest'; console.log(x.name(), x.hi())`)
-    await writeFileAsync(path.join(testDir, 'name.js'), `import x from 'manifest'; console.log(x.index(), x.hi())`)
-    await writeFileAsync(path.join(testDir, 'hi', 'name.js'), `import x from 'manifest'; console.log(x.index(), x.name())`)
+    await fs.promises.mkdir(path.join(testDir, 'hi'), { recursive: true })
+    await fs.promises.writeFile(path.join(testDir, 'index.js'), `import x from 'manifest'; console.log(x.name(), x.hi())`)
+    await fs.promises.writeFile(path.join(testDir, 'name.js'), `import x from 'manifest'; console.log(x.index(), x.hi())`)
+    await fs.promises.writeFile(path.join(testDir, 'hi', 'name.js'), `import x from 'manifest'; console.log(x.index(), x.name())`)
     await esbuild.build({
       entryPoints: [path.join(testDir, 'index.js')],
       outdir,
@@ -2144,7 +2140,7 @@ let pluginTests = {
   async fileLoaderCustomNamespaceIssue1404({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.data')
     const outdir = path.join(testDir, 'out')
-    await writeFileAsync(input, `some data`)
+    await fs.promises.writeFile(input, `some data`)
     await esbuild.build({
       entryPoints: [path.basename(input)],
       absWorkingDir: testDir,
@@ -2161,7 +2157,7 @@ let pluginTests = {
             }
           })
           build.onLoad({ filter: /.*/, namespace: 'ns' }, async (args) => {
-            const data = await readFileAsync(path.join(testDir, args.path), 'utf8')
+            const data = await fs.promises.readFile(path.join(testDir, args.path), 'utf8')
             return {
               contents: data.split('').reverse().join(''),
               loader: 'file',
@@ -2170,7 +2166,7 @@ let pluginTests = {
         },
       }],
     })
-    assert.strictEqual(await readFileAsync(input, 'utf8'), `some data`)
+    assert.strictEqual(await fs.promises.readFile(input, 'utf8'), `some data`)
     assert.strictEqual(require(path.join(outdir, 'in.js')), `./in.data`)
   },
 
@@ -2231,7 +2227,7 @@ error: Invalid path suffix "%what" returned from plugin (must start with "?" or 
 
   async onResolveWithInternalOnLoadAndQuerySuffix({ testDir, esbuild }) {
     const entry = path.join(testDir, 'entry.js')
-    await writeFileAsync(entry, `console.log('entry')`)
+    await fs.promises.writeFile(entry, `console.log('entry')`)
     const onResolveSet = new Set()
     const onLoadSet = new Set()
     await esbuild.build({
@@ -2286,7 +2282,7 @@ error: Invalid path suffix "%what" returned from plugin (must start with "?" or 
 
   async onLoadWithInternalOnResolveAndQuerySuffix({ testDir, esbuild }) {
     const entry = path.join(testDir, 'entry.js')
-    await writeFileAsync(entry, `console.log('entry')`)
+    await fs.promises.writeFile(entry, `console.log('entry')`)
     const onResolveSet = new Set()
     const onLoadSet = new Set()
     await esbuild.build({
@@ -2447,8 +2443,8 @@ error: Invalid path suffix "%what" returned from plugin (must start with "?" or 
   async callResolveBuiltInHandler({ esbuild, testDir }) {
     const srcDir = path.join(testDir, 'src')
     const input = path.join(srcDir, 'input.js')
-    await mkdirAsync(srcDir, { recursive: true })
-    await writeFileAsync(input, `console.log(123)`)
+    await fs.promises.mkdir(srcDir, { recursive: true })
+    await fs.promises.writeFile(input, `console.log(123)`)
     const result = await esbuild.build({
       entryPoints: ['entry'],
       write: false,
@@ -2470,8 +2466,8 @@ error: Invalid path suffix "%what" returned from plugin (must start with "?" or 
   async callResolvePluginHandler({ esbuild, testDir }) {
     const srcDir = path.join(testDir, 'src')
     const input = path.join(srcDir, 'input.js')
-    await mkdirAsync(srcDir, { recursive: true })
-    await writeFileAsync(input, `console.log(123)`)
+    await fs.promises.mkdir(srcDir, { recursive: true })
+    await fs.promises.writeFile(input, `console.log(123)`)
     const result = await esbuild.build({
       entryPoints: ['entry'],
       write: false,
@@ -2750,6 +2746,39 @@ console.log(foo_default, foo_default2);
     const json = JSON.parse(map.text)
     assert.deepStrictEqual(json.sources, ['mynamespace:lib/foo', '../entry.js'])
   },
+
+  async resolveNewURLWithResolveDir({ esbuild, testDir }) {
+    const indir = path.join(testDir, 'in')
+    const outdir = path.join(testDir, 'out')
+    await fs.promises.mkdir(indir)
+    await fs.promises.writeFile(path.join(indir, 'foo.js'), `
+      export default 123
+    `)
+    await esbuild.build({
+      entryPoints: ['entry'],
+      bundle: true,
+      splitting: true,
+      format: 'esm',
+      outdir,
+      outExtension: { '.js': '.mjs' },
+      plugins: [{
+        name: 'name',
+        setup(build) {
+          build.onResolve({ filter: /entry/ }, () => ({
+            path: 'entry',
+            namespace: 'ns',
+          }))
+          build.onLoad({ filter: /entry/ }, () => ({
+            contents: 'export default new URL("./foo", import.meta.url)',
+            resolveDir: indir,
+          }))
+        },
+      }],
+    })
+    const fooURL = (await import(url.pathToFileURL(path.join(outdir, 'entry.mjs')))).default
+    const value = (await import(fooURL)).default
+    assert.strictEqual(value, 123)
+  },
 }
 
 const makeRebuildUntilPlugin = () => {
@@ -2781,9 +2810,9 @@ let syncTests = {
     const outfile = path.join(testDir, 'out.js')
     const input = path.join(srcDir, 'in.js')
     const example = path.join(srcDir, 'example.js')
-    await mkdirAsync(srcDir, { recursive: true })
-    await writeFileAsync(input, `import {x} from "./example.js"; exports.x = x`)
-    await writeFileAsync(example, `export let x = 1`)
+    await fs.promises.mkdir(srcDir, { recursive: true })
+    await fs.promises.writeFile(input, `import {x} from "./example.js"; exports.x = x`)
+    await fs.promises.writeFile(example, `export let x = 1`)
 
     const { rebuildUntil, plugin } = makeRebuildUntilPlugin()
     const ctx = await esbuild.context({
@@ -2822,7 +2851,7 @@ let syncTests = {
           () => setTimeout(() => writeFileAtomic(example, `export let x = 2`), 250),
           () => fs.readFileSync(outfile, 'utf8') !== code,
         )
-        code = await readFileAsync(outfile, 'utf8')
+        code = await fs.promises.readFile(outfile, 'utf8')
         exports = {}
         new Function('exports', code)(exports)
         assert.strictEqual(result2.outputFiles, void 0)
@@ -2839,10 +2868,10 @@ let syncTests = {
     const outfile = path.join(testDir, 'out.js')
     const input = path.join(srcDir, 'in.js')
     const example = path.join(otherDir, 'example.js')
-    await mkdirAsync(srcDir, { recursive: true })
-    await mkdirAsync(otherDir, { recursive: true })
-    await writeFileAsync(input, `import {x} from "<virtual>"; exports.x = x`)
-    await writeFileAsync(example, `export let x = 1`)
+    await fs.promises.mkdir(srcDir, { recursive: true })
+    await fs.promises.mkdir(otherDir, { recursive: true })
+    await fs.promises.writeFile(input, `import {x} from "<virtual>"; exports.x = x`)
+    await fs.promises.writeFile(example, `export let x = 1`)
 
     const { rebuildUntil, plugin } = makeRebuildUntilPlugin()
     const ctx = await esbuild.context({
@@ -2884,7 +2913,7 @@ let syncTests = {
           () => setTimeout(() => writeFileAtomic(example, `export let x = 2`), 250),
           () => fs.readFileSync(outfile, 'utf8') !== code,
         )
-        code = await readFileAsync(outfile, 'utf8')
+        code = await fs.promises.readFile(outfile, 'utf8')
         exports = {}
         new Function('exports', code)(exports)
         assert.strictEqual(result2.outputFiles, void 0)
@@ -2900,9 +2929,9 @@ let syncTests = {
     const otherDir = path.join(testDir, 'other')
     const outfile = path.join(testDir, 'out.js')
     const input = path.join(srcDir, 'in.js')
-    await mkdirAsync(srcDir, { recursive: true })
-    await mkdirAsync(otherDir, { recursive: true })
-    await writeFileAsync(input, `import {x} from "<virtual>"; exports.x = x`)
+    await fs.promises.mkdir(srcDir, { recursive: true })
+    await fs.promises.mkdir(otherDir, { recursive: true })
+    await fs.promises.writeFile(input, `import {x} from "<virtual>"; exports.x = x`)
 
     const { rebuildUntil, plugin } = makeRebuildUntilPlugin()
     const ctx = await esbuild.context({
@@ -2943,7 +2972,7 @@ let syncTests = {
           () => setTimeout(() => writeFileAtomic(path.join(otherDir, 'file.txt'), `...`), 250),
           () => fs.readFileSync(outfile, 'utf8') !== code,
         )
-        code = await readFileAsync(outfile, 'utf8')
+        code = await fs.promises.readFile(outfile, 'utf8')
         exports = {}
         new Function('exports', code)(exports)
         assert.strictEqual(result2.outputFiles, void 0)
@@ -2956,7 +2985,7 @@ let syncTests = {
 
   async onStartCallback({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
-    await writeFileAsync(input, ``)
+    await fs.promises.writeFile(input, ``)
 
     let onStartTimes = 0
     let errorToThrow = null
@@ -3062,7 +3091,7 @@ let syncTests = {
 
   async onEndCallback({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
-    await writeFileAsync(input, ``)
+    await fs.promises.writeFile(input, ``)
 
     let onEndTimes = 0
     let errorToThrow = null
@@ -3149,7 +3178,7 @@ let syncTests = {
 
   async onEndCallbackMutateContents({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
-    await writeFileAsync(input, `x=y`)
+    await fs.promises.writeFile(input, `x=y`)
 
     let onEndTimes = 0
 
@@ -3190,9 +3219,9 @@ let syncTests = {
     const outfile = path.join(testDir, 'out.js')
     const input = path.join(srcDir, 'in.js')
     const example = path.join(srcDir, 'example.js')
-    await mkdirAsync(srcDir, { recursive: true })
-    await writeFileAsync(input, `import {x} from "./example.js"; exports.x = x`)
-    await writeFileAsync(example, `export let x = 1`)
+    await fs.promises.mkdir(srcDir, { recursive: true })
+    await fs.promises.writeFile(input, `import {x} from "./example.js"; exports.x = x`)
+    await fs.promises.writeFile(example, `export let x = 1`)
 
     let onStartCalls = 0
     let onEndCalls = 0
@@ -3254,7 +3283,7 @@ let syncTests = {
           () => setTimeout(() => writeFileAtomic(example, `export let x = 2`), 250),
           () => fs.readFileSync(outfile, 'utf8') !== code,
         )
-        code = await readFileAsync(outfile, 'utf8')
+        code = await fs.promises.readFile(outfile, 'utf8')
         exports = {}
         new Function('exports', code)(exports)
         assert.strictEqual(result2.outputFiles, void 0)
@@ -3480,7 +3509,7 @@ async function main() {
   const runTest = async ([name, fn]) => {
     let testDir = path.join(rootTestDir, name)
     try {
-      await mkdirAsync(testDir)
+      await fs.promises.mkdir(testDir)
       await fn({ esbuild, testDir })
       removeRecursiveSync(testDir)
       return true

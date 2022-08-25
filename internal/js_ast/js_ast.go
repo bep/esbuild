@@ -492,6 +492,7 @@ func (*ERequireString) isExpr()        {}
 func (*ERequireResolveString) isExpr() {}
 func (*EImportString) isExpr()         {}
 func (*EImportCall) isExpr()           {}
+func (*ENewURLImportMeta) isExpr()     {}
 
 type EArray struct {
 	Items            []Expr
@@ -929,6 +930,10 @@ type EImportCall struct {
 	OptionsOrNil  Expr
 	CloseParenLoc logger.Loc
 	Phase         ast.ImportPhase
+}
+
+type ENewURLImportMeta struct {
+	ImportRecordIndex uint32
 }
 
 type Stmt struct {

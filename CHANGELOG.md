@@ -2,6 +2,21 @@
 
 ## 0.28.1
 
+* Interpret and rewrite `new URL(..., import.meta.url)` expressions when bundling ([#312](https://github.com/evanw/esbuild/issues/312), [#795](https://github.com/evanw/esbuild/issues/795), [#2470](https://github.com/evanw/esbuild/pull/2470))
+
+    Some other bundlers have adopted a convention where the syntax `new URL('./file.js', import.meta.url)` causes `file.js` to be included in the current bundling operation as an additional entry point. The `'./file.js'` string is rewritten in the bundler's output to point to the resulting generated file for that entry point in the output directory (relative to the generated file containing the `new URL(...)` syntax). This is somewhat similar to how `import('./file.js')` works except that this reference just returns a `URL` object without importing the module. That lets you pass the URL of a module to other APIs such as `new Worker(...)` that take a script URL as input.
+
+    Previously this pattern didn't work at all with esbuild, but it will now work in esbuild starting with this release. To use it you must ensure that bundling is enabled, that the output format is set to `esm`, and that code splitting is enabled (so you need to use `--bundle --format=esm --splitting`). In addition, the path must be a relative path (i.e. it must start with either `./` or `../`). Here's what using this feature looks like:
+
+    ```ts
+    const url = new URL('./worker.ts', import.meta.url)
+    const worker = new Worker(url, { type: 'module' })
+
+    worker.onmessage = (event: MessageEvent) => {
+      console.log(event.data)
+    }
+    ```
+
 * Disallow ``\`` in local development server HTTP requests ([GHSA-g7r4-m6w7-qqqr](https://github.com/evanw/esbuild/security/advisories/GHSA-g7r4-m6w7-qqqr))
 
     This release fixes a security issue where HTTP requests to esbuild's local development server could traverse outside of the serve directory on Windows using a ``\`` backslash character. It happened due to the use of Go's `path.Clean()` function, which only handles Unix-style `/` characters. HTTP requests with paths containing ``\`` are no longer allowed.

@@ -400,6 +400,7 @@ export type ImportKind =
   | 'require-call'
   | 'dynamic-import'
   | 'require-resolve'
+  | 'new-url'
 
   // CSS
   | 'import-rule'

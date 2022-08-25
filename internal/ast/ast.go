@@ -30,6 +30,9 @@ const (
 	// A call to "require.resolve()"
 	ImportRequireResolve
 
+	// "new URL('path', import.meta.url)" with a string argument
+	ImportNewURL
+
 	// A CSS "@import" rule
 	ImportAt
 
@@ -50,6 +53,8 @@ func (kind ImportKind) StringForMetafile() string {
 		return "dynamic-import"
 	case ImportRequireResolve:
 		return "require-resolve"
+	case ImportNewURL:
+		return "new-url"
 	case ImportAt:
 		return "import-rule"
 	case ImportComposesFrom:
