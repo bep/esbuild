@@ -6214,6 +6214,9 @@ func (c *linkerContext) generateChunkCSS(chunkIndex int, chunkWaitGroup *sync.Wa
 				rules = append(rules, rule)
 			}
 
+			// Run OnCSSRule plugin callbacks to allow filtering/dropping rules
+			rules = c.runOnCSSRulePlugins(rules, file.InputFile.Source.KeyPath.Text, ast.ImportRecords)
+
 			rules, ast.ImportRecords = wrapRulesWithConditions(rules, ast.ImportRecords, entry.conditions, entry.conditionImportRecords)
 
 			// Remove top-level duplicate rules across files
@@ -6535,6 +6538,123 @@ func wrapRulesWithConditions(
 type legalCommentEntry struct {
 	sourceIndex uint32
 	comments    []string
+}
+
+func cssRuleKind(rule css_ast.Rule) string {
+	switch rule.Data.(type) {
+	case *css_ast.RSelector:
+		return "qualified-rule"
+	case *css_ast.RQualified:
+		return "qualified-rule"
+	case *css_ast.RAtKeyframes:
+		return "at-keyframes"
+	case *css_ast.RAtMedia:
+		return "at-media"
+	case *css_ast.RAtLayer:
+		return "at-layer"
+	case *css_ast.RAtScope:
+		return "at-scope"
+	case *css_ast.RAtCharset:
+		return "at-charset"
+	case *css_ast.RAtImport:
+		return "at-import"
+	case *css_ast.RKnownAt:
+		return "known-at"
+	case *css_ast.RUnknownAt:
+		return "unknown-at"
+	case *css_ast.RDeclaration:
+		return "declaration"
+	case *css_ast.RBadDeclaration:
+		return "bad-declaration"
+	case *css_ast.RComment:
+		return "comment"
+	default:
+		return "unknown"
+	}
+}
+
+// runOnCSSRulePlugins applies all registered OnCSSRule plugin callbacks to the
+// given rules slice, returning a filtered slice with dropped rules removed.
+// It recurses into container at-rules (@media, @layer, @scope, etc.) to also
+// filter their child rules.
+func (c *linkerContext) runOnCSSRulePlugins(rules []css_ast.Rule, path string, importRecords []ast.ImportRecord) []css_ast.Rule {
+	// Collect all OnCSSRule callbacks from all plugins
+	var callbacks []config.OnCSSRule
+	for _, plugin := range c.options.Plugins {
+		callbacks = append(callbacks, plugin.OnCSSRule...)
+	}
+	if len(callbacks) == 0 {
+		return rules
+	}
+
+	return c.filterCSSRules(rules, path, importRecords, callbacks)
+}
+
+func (c *linkerContext) filterCSSRules(rules []css_ast.Rule, path string, importRecords []ast.ImportRecord, callbacks []config.OnCSSRule) []css_ast.Rule {
+	filtered := make([]css_ast.Rule, 0, len(rules))
+	for _, rule := range rules {
+		// Recurse into container at-rules to filter their children.
+		// Drop the container if all children were filtered out.
+		childrenEmpty := false
+		switch r := rule.Data.(type) {
+		case *css_ast.RAtMedia:
+			r.Rules = c.filterCSSRules(r.Rules, path, importRecords, callbacks)
+			childrenEmpty = len(r.Rules) == 0
+		case *css_ast.RAtLayer:
+			r.Rules = c.filterCSSRules(r.Rules, path, importRecords, callbacks)
+			childrenEmpty = len(r.Rules) == 0
+		case *css_ast.RAtScope:
+			r.Rules = c.filterCSSRules(r.Rules, path, importRecords, callbacks)
+			childrenEmpty = len(r.Rules) == 0
+		case *css_ast.RKnownAt:
+			r.Rules = c.filterCSSRules(r.Rules, path, importRecords, callbacks)
+			childrenEmpty = len(r.Rules) == 0
+		}
+
+		drop := childrenEmpty
+		var selector string
+		selectorComputed := false
+
+		for _, cb := range callbacks {
+			// Lazily compute selector text (only when a filter needs it)
+			if !selectorComputed {
+				selector = css_printer.PrintSelectors(rule, c.graph.Symbols, importRecords)
+				selectorComputed = true
+			}
+
+			// Check the filter regex
+			if !cb.Filter.MatchString(selector) {
+				continue
+			}
+
+			result := cb.Callback(config.OnCSSRuleArgs{
+				Path:     path,
+				Selector: selector,
+				Kind:     cssRuleKind(rule),
+			})
+
+			if result.ThrownError != nil {
+				c.log.AddError(nil, logger.Range{},
+					fmt.Sprintf("[%s] %s", cb.Name, result.ThrownError.Error()))
+				continue
+			}
+
+			for _, msg := range result.Msgs {
+				c.log.AddMsg(msg)
+			}
+
+			if result.Drop {
+				drop = true
+				break
+			}
+		}
+
+		if !drop {
+			filtered = append(filtered, rule)
+		}
+	}
+
+	return filtered
 }
 
 // Add all unique legal comments to the end of the file. These are

@@ -2042,6 +2042,35 @@ func (impl *pluginImpl) onLoad(options OnLoadOptions, callback func(OnLoadArgs) 
 	})
 }
 
+func (impl *pluginImpl) onCSSRule(options OnCSSRuleOptions, callback func(OnCSSRuleArgs) (OnCSSRuleResult, error)) {
+	filter, err := config.CompileFilterForPlugin(impl.plugin.Name, "OnCSSRule", options.Filter)
+	if filter == nil {
+		impl.log.AddError(nil, logger.Range{}, err.Error())
+		return
+	}
+
+	impl.plugin.OnCSSRule = append(impl.plugin.OnCSSRule, config.OnCSSRule{
+		Filter: filter,
+		Name:   impl.plugin.Name,
+		Callback: func(args config.OnCSSRuleArgs) (result config.OnCSSRuleResult) {
+			response, err := callback(OnCSSRuleArgs{
+				Path:     args.Path,
+				Selector: args.Selector,
+				Kind:     args.Kind,
+			})
+
+			if err != nil {
+				result.ThrownError = err
+				return
+			}
+
+			result.Drop = response.Drop
+			result.Msgs = convertErrorsAndWarningsToInternal(response.Errors, response.Warnings)
+			return
+		},
+	})
+}
+
 func (impl *pluginImpl) validatePathsArray(pathsIn []string, name string) (pathsOut []string) {
 	if len(pathsIn) > 0 {
 		pathKind := fmt.Sprintf("%s path for plugin %q", name, impl.plugin.Name)
@@ -2175,6 +2204,7 @@ func loadPlugins(initialOptions *BuildOptions, fs fs.FS, log logger.Log, caches 
 			OnDispose:      onDispose,
 			OnResolve:      impl.onResolve,
 			OnLoad:         impl.onLoad,
+			OnCSSRule:      impl.onCSSRule,
 		})
 
 		plugins = append(plugins, impl.plugin)

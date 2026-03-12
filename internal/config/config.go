@@ -778,6 +778,7 @@ type Plugin struct {
 	OnStart   []OnStart
 	OnResolve []OnResolve
 	OnLoad    []OnLoad
+	OnCSSRule []OnCSSRule
 }
 
 type OnStart struct {
@@ -847,6 +848,24 @@ type OnLoadResult struct {
 	AbsWatchDirs  []string
 
 	Loader Loader
+}
+
+type OnCSSRule struct {
+	Filter   *regexp.Regexp
+	Callback func(OnCSSRuleArgs) OnCSSRuleResult
+	Name     string
+}
+
+type OnCSSRuleArgs struct {
+	Path     string
+	Selector string
+	Kind     string
+}
+
+type OnCSSRuleResult struct {
+	ThrownError error
+	Msgs        []logger.Msg
+	Drop        bool
 }
 
 func PrettyPrintTargetEnvironment(originalTargetEnv string, unsupportedJSFeatureOverridesMask compat.JSFeature) (where string) {

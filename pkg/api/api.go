@@ -584,6 +584,10 @@ type PluginBuild struct {
 	// Documentation: https://esbuild.github.io/plugins/#on-load
 	OnLoad func(options OnLoadOptions, callback func(OnLoadArgs) (OnLoadResult, error))
 
+	// OnCSSRule registers a callback that is called for each top-level CSS rule
+	// during the linking phase. The callback can choose to drop rules from the output.
+	OnCSSRule func(options OnCSSRuleOptions, callback func(OnCSSRuleArgs) (OnCSSRuleResult, error))
+
 	// Documentation: https://esbuild.github.io/plugins/#on-dispose
 	OnDispose func(callback func())
 }
@@ -686,6 +690,39 @@ type OnLoadResult struct {
 
 	WatchFiles []string
 	WatchDirs  []string
+}
+
+// OnCSSRuleOptions configures the OnCSSRule plugin hook.
+// The Filter regex is matched against the selector text of each rule.
+// For qualified rules this is the selector list (e.g. ".foo, .bar").
+// For at-rules this is the at-token (e.g. "@media", "@keyframes").
+type OnCSSRuleOptions struct {
+	Filter string
+}
+
+// OnCSSRuleArgs is passed to the OnCSSRule callback for each CSS rule.
+type OnCSSRuleArgs struct {
+	// The path of the source file containing this rule
+	Path string
+
+	// The selector text of the rule. For qualified rules this is the
+	// comma-separated selector list (e.g. ".foo, .bar > .baz").
+	// For at-rules this is the at-token (e.g. "@media", "@keyframes").
+	Selector string
+
+	// The kind of rule: "qualified-rule", "at-keyframes", "at-media",
+	// "at-layer", "at-scope", "at-charset", "known-at", "unknown-at",
+	// "declaration", "bad-declaration", "comment"
+	Kind string
+}
+
+// OnCSSRuleResult is returned from the OnCSSRule callback.
+type OnCSSRuleResult struct {
+	Errors   []Message
+	Warnings []Message
+
+	// Set to true to drop this rule from the output
+	Drop bool
 }
 
 type ResolveKind uint8

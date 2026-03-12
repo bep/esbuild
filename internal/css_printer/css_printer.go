@@ -65,6 +65,41 @@ type PrintResult struct {
 	SourceMapChunk sourcemap.Chunk
 }
 
+// PrintSelectors prints the selectors of a CSS rule as a comma-separated string.
+// For qualified rules (RSelector), this prints the full selector list.
+// For at-rules, this returns the at-token (e.g. "@media", "@keyframes").
+// This is used by the CSS rule filter plugin API.
+func PrintSelectors(rule css_ast.Rule, symbols ast.SymbolMap, importRecords []ast.ImportRecord) string {
+	switch r := rule.Data.(type) {
+	case *css_ast.RSelector:
+		p := printer{symbols: symbols, importRecords: importRecords}
+		p.printComplexSelectors(r.Selectors, 0, layoutSingleLine)
+		return string(p.css)
+	case *css_ast.RQualified:
+		p := printer{symbols: symbols, importRecords: importRecords}
+		p.printTokens(r.Prelude, printTokensOpts{})
+		return string(p.css)
+	case *css_ast.RAtKeyframes:
+		return "@" + r.AtToken
+	case *css_ast.RAtMedia:
+		return "@media"
+	case *css_ast.RAtLayer:
+		return "@layer"
+	case *css_ast.RAtScope:
+		return "@scope"
+	case *css_ast.RAtCharset:
+		return "@charset"
+	case *css_ast.RAtImport:
+		return "@import"
+	case *css_ast.RKnownAt:
+		return "@" + r.AtToken
+	case *css_ast.RUnknownAt:
+		return "@" + r.AtToken
+	default:
+		return ""
+	}
+}
+
 func Print(tree css_ast.AST, symbols ast.SymbolMap, options Options) PrintResult {
 	p := printer{
 		options:       options,
